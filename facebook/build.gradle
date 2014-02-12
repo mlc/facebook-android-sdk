@@ -1,7 +1,21 @@
 apply plugin: 'android-library'
+apply plugin: 'maven'
+
+group = 'com.meetup'
+archivesBaseName = 'facebook-android-sdk'
+version = '3.6.0'
+
+configurations {
+    deployerJars
+}
+
+repositories {
+    mavenCentral()
+}
 
 dependencies {
     compile 'com.android.support:support-v4:13.0.+'
+    deployerJars 'org.apache.maven.wagon:wagon-ssh:2.2'
 }
 
 android {
@@ -20,4 +34,12 @@ android {
             res.srcDirs = ['res']
         }
     }
+}
+
+uploadArchives {
+  repositories.mavenDeployer {
+    configuration = configurations.deployerJars
+    repository(url: "scp://ds4.dev.meetup.com/var/www/ds4.dev.meetup.com/htdocs/repo")
+    pom.artifactId = 'facebook-android-sdk'
+  }
 }
