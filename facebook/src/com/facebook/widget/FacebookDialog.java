@@ -180,12 +180,14 @@ public class FacebookDialog {
 
     private Activity activity;
     private Fragment fragment;
+    private Object nativeFragment;
     private PendingCall appCall;
     private OnPresentCallback onPresentCallback;
 
-    private FacebookDialog(Activity activity, Fragment fragment, PendingCall appCall, OnPresentCallback onPresentCallback) {
+    private FacebookDialog(Activity activity, Fragment fragment, Object nativeFragment, PendingCall appCall, OnPresentCallback onPresentCallback) {
         this.activity = activity;
         this.fragment = fragment;
+        this.nativeFragment = nativeFragment;
         this.appCall = appCall;
         this.onPresentCallback = onPresentCallback;
     }
@@ -209,6 +211,8 @@ public class FacebookDialog {
 
         if (fragment != null) {
             fragment.startActivityForResult(appCall.getRequestIntent(), appCall.getRequestCode());
+        } else if (nativeFragment != null) {
+            ((android.app.Fragment)nativeFragment).startActivityForResult(appCall.getRequestIntent(), appCall.getRequestCode());
         } else {
             activity.startActivityForResult(appCall.getRequestIntent(), appCall.getRequestCode());
         }
@@ -307,6 +311,7 @@ public class FacebookDialog {
         final protected String applicationId;
         final protected PendingCall appCall;
         protected Fragment fragment;
+        protected Object nativeFragment;
         protected String applicationName;
 
         Builder(Activity activity) {
@@ -359,6 +364,21 @@ public class FacebookDialog {
         }
 
         /**
+         * Sets the fragment that should launch the dialog. This allows the dialog to be
+         * launched from a Fragment, and will allow the fragment to receive the
+         * {@link Fragment#onActivityResult(int, int, android.content.Intent) onActivityResult}
+         * call rather than the Activity.
+         *
+         * @param fragment the fragment that contains this control
+         */
+        public CONCRETE setFragment(android.app.Fragment fragment) {
+            this.nativeFragment = fragment;
+            @SuppressWarnings("unchecked")
+            CONCRETE result = (CONCRETE) this;
+            return result;
+        }
+
+        /**
          * Constructs a FacebookDialog with an Intent that is correctly populated to present the dialog within
          * the Facebook application.
          * @return a FacebookDialog instance
@@ -376,7 +396,7 @@ public class FacebookDialog {
             }
             appCall.setRequestIntent(intent);
 
-            return new FacebookDialog(activity, fragment, appCall, getOnPresentCallback());
+            return new FacebookDialog(activity, fragment, nativeFragment, appCall, getOnPresentCallback());
         }
 
         /**

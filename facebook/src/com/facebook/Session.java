@@ -16,6 +16,7 @@
 
 package com.facebook;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.*;
 import android.content.pm.ResolveInfo;
@@ -854,6 +855,29 @@ public class Session implements Serializable {
     }
 
     /**
+     * If allowLoginUI is true, this will create a new Session, make it active, and
+     * open it. If the default token cache is not available, then this will request
+     * basic permissions. If the default token cache is available and cached tokens
+     * are loaded, this will use the cached token and associated permissions.
+     * <p/>
+     * If allowedLoginUI is false, this will only create the active session and open
+     * it if it requires no user interaction (i.e. the token cache is available and
+     * there are cached tokens).
+     *
+     * @param context      The Activity or Service creating this Session
+     * @param fragment     The Fragment that is opening the new Session.
+     * @param allowLoginUI if false, only sets the active session and opens it if it
+     *                     does not require user interaction
+     * @param callback     The {@link StatusCallback SessionStatusCallback} to
+     *                     notify regarding Session state changes.
+     * @return The new Session or null if one could not be created
+     */
+    public static Session openActiveSession(Context context, android.app.Fragment fragment,
+            boolean allowLoginUI, StatusCallback callback) {
+        return openActiveSession(context, allowLoginUI, new OpenRequest(fragment).setCallback(callback));
+    }
+
+    /**
      * Opens a session based on an existing Facebook access token, and also makes this session
      * the currently active session. This method should be used
      * only in instances where an application has previously obtained an access token and wishes
@@ -1681,6 +1705,21 @@ public class Session implements Serializable {
             };
         }
 
+        @TargetApi(11)
+        AuthorizationRequest(final android.app.Fragment fragment) {
+            startActivityDelegate = new StartActivityDelegate() {
+                @Override
+                public void startActivityForResult(Intent intent, int requestCode) {
+                    fragment.startActivityForResult(intent, requestCode);
+                }
+
+                @Override
+                public Activity getActivityContext() {
+                    return fragment.getActivity();
+                }
+            };
+        }
+
         /**
          * Constructor to be used for V1 serialization only, DO NOT CHANGE.
          */
@@ -1885,6 +1924,16 @@ public class Session implements Serializable {
         }
 
         /**
+         * Constructs an OpenRequest.
+         *
+         * @param fragment the Fragment to use to open the Session
+         */
+        @TargetApi(11)
+        public OpenRequest(android.app.Fragment fragment) {
+            super(fragment);
+        }
+
+        /**
          * Sets the StatusCallback for the OpenRequest.
          *
          * @param statusCallback The {@link StatusCallback SessionStatusCallback} to
@@ -1992,6 +2041,18 @@ public class Session implements Serializable {
         /**
          * Constructs a NewPermissionsRequest.
          *
+         * @param fragment    the Fragment used to issue the request
+         * @param permissions additional permissions to request
+         */
+        @TargetApi(11)
+        public NewPermissionsRequest(android.app.Fragment fragment, List<String> permissions) {
+            super(fragment);
+            setPermissions(permissions);
+        }
+
+        /**
+         * Constructs a NewPermissionsRequest.
+         *
          * @param activity    the Activity used to issue the request
          * @param permissions additional permissions to request
          */
@@ -2007,6 +2068,18 @@ public class Session implements Serializable {
          * @param permissions additional permissions to request
          */
         public NewPermissionsRequest(Fragment fragment, String... permissions) {
+            super(fragment);
+            setPermissions(permissions);
+        }
+
+        /**
+         * Constructs a NewPermissionsRequest.
+         *
+         * @param fragment    the Fragment used to issue the request
+         * @param permissions additional permissions to request
+         */
+        @TargetApi(11)
+        public NewPermissionsRequest(android.app.Fragment fragment, String... permissions) {
             super(fragment);
             setPermissions(permissions);
         }
