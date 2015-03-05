@@ -4,11 +4,16 @@ repositories {
   mavenCentral()
 }
 
-project.group = 'com.facebook.android'
+project.group = 'com.meetup'
+
+configurations {
+    deployerJars
+}
 
 dependencies {
     compile 'com.android.support:support-v4:[21,22)'
     compile 'com.parse.bolts:bolts-android:1.1.4'
+    deployerJars 'org.apache.maven.wagon:wagon-ssh:2.2'
 }
 
 android {
@@ -57,14 +62,8 @@ task setVersion {
 }
 
 uploadArchives {
-  repositories.mavenDeployer {
-    configuration = configurations.deployerJars
-    pom.artifactId = 'facebook-android-sdk'
-  }
-}
-
-uploadArchives {
     repositories.mavenDeployer {
+        configuration = configurations.deployerJars
         beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
 
         repository(url: "scp://ds4.dev.meetup.com/var/www/ds4.dev.meetup.com/htdocs/repo")
